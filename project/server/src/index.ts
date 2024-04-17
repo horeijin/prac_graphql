@@ -1,24 +1,25 @@
 import 'reflect-metadata';
 import express from 'express';
-import { ApolloServer } from 'apollo-server-express';
-import { ApolloServerPluginLandingPageLocalDefault } from 'apollo-server-core';
 import http from 'http';
+import cookieParser from 'cookie-parser';
+import createApolloServer from './apollo/createApolloServer';
 
-import { buildSchema } from 'type-graphql';
-import { FilmResolver } from './resolvers/Film';
-import { CutResolver } from './resolvers/Cut';
+import { createDB } from './db/db-client';
 
 async function main() {
+    await createDB();
     const app = express();
+    app.use(cookieParser());
 
-    const apolloServer = new ApolloServer({
-        schema: await buildSchema({
-            resolvers: [FilmResolver, CutResolver],
-        }),
-        plugins: [ApolloServerPluginLandingPageLocalDefault()],
-    });
+    const apolloServer = await createApolloServer();
     await apolloServer.start();
-    apolloServer.applyMiddleware({ app });
+    apolloServer.applyMiddleware({ 
+        app,
+        cors: {
+            origin: ['http://localhost:3000','https://studio.apollographql.com'],
+            credentials: true,
+        }
+    });
 
     const httpServer = http.createServer(app);
 

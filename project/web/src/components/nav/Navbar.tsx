@@ -1,15 +1,62 @@
+import { FC, useMemo } from 'react';
 import {
+  Avatar,
   Box,
   Button,
   Flex,
   Link,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
   Stack,
   useColorModeValue,
 } from '@chakra-ui/react';
+import { useApolloClient } from '@apollo/client';
 import { Link as RouterLink } from 'react-router-dom';
 import { ColorModeSwitcher } from '../ColorModeSwitcher';
+import { useLogoutMutation, useMeQuery } from '../../generated/graphql';
 
-export default function Navbar(): JSX.Element {
+const LoggedInNavbarItem = () => {
+  const client = useApolloClient();
+  const [logout, { loading: logoutLoading }] = useLogoutMutation();
+
+  async function onLogoutClick() {
+    try {
+      await logout();
+      localStorage.removeItem('access_token');
+      await client.resetStore();
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  return (
+    <Stack justify="flex-end" alignItems="center" direction="row" spacing={3}>
+    <ColorModeSwitcher />
+
+    <Menu>
+      <MenuButton as={Button} rounded="full" variant="link" cursor="pointer">
+        <Avatar size="sm" />
+      </MenuButton>
+      <MenuList>
+        <MenuItem isDisabled={logoutLoading} onClick={onLogoutClick}>
+          로그아웃
+        </MenuItem>
+      </MenuList>
+    </Menu>
+  </Stack>
+  );
+};
+
+const Navbar:FC = () => {
+  const accessToken = localStorage.getItem('access_token');
+  const { data } = useMeQuery({ skip: !accessToken });
+  const isLoggedIn = useMemo(() => {
+    if (accessToken) return data?.me?.id;
+    return false;
+  }, [accessToken, data?.me?.id]);
+
   return (
     <Box
       zIndex={10}
@@ -41,29 +88,35 @@ export default function Navbar(): JSX.Element {
           </Link>
         </Flex>
 
-        <Stack justify="flex-end" direction="row" spacing={6}>
-          <ColorModeSwitcher />
-          <Button
-            fontSize="sm"
-            fontWeight={400}
-            variant="link"
-            as={RouterLink}
-            to="/login"
-          >
-            로그인
-          </Button>
-          <Button
-            display={{ base: 'none', md: 'inline-flex' }}
-            fontSize="sm"
-            fontWeight={600}
-            colorScheme="teal"
-            as={RouterLink}
-            to="/signup"
-          >
-            시작하기
-          </Button>
-        </Stack>
+        {isLoggedIn ? (
+          <LoggedInNavbarItem />
+        ) : (
+          <Stack justify="flex-end" direction="row" spacing={6}>
+            <ColorModeSwitcher />
+            <Button
+              fontSize="sm"
+              fontWeight={400}
+              variant="link"
+              as={RouterLink}
+              to="/login"
+            >
+              로그인
+            </Button>
+            <Button
+              display={{ base: 'none', md: 'inline-flex' }}
+              fontSize="sm"
+              fontWeight={600}
+              colorScheme="teal"
+              as={RouterLink}
+              to="/signup"
+            >
+              시작하기
+            </Button>
+          </Stack>
+        )}
       </Flex>
     </Box>
   );
 }
+
+export default Navbar;
