@@ -7,6 +7,8 @@ import { CutResolver } from '../resolvers/Cut';
 import { FilmResolver } from '../resolvers/Film';
 import { UserResolver } from '../resolvers/User';
 
+import { createCutVoteLoader } from '../dataloaders/cutVoteLoader';
+
 import {
   JwtVerifiedUser,
   verifyAccessTokenFromReqHeaders,
@@ -18,7 +20,7 @@ export interface MyContext {
   res: Response;
   verifiedUser: JwtVerifiedUser;
   redis: typeof redis;
-  // cutVoteLoader: ReturnType<typeof createCutVoteLoader>;
+  cutVoteLoader: ReturnType<typeof createCutVoteLoader>;
 }
 
 const createApolloServer = async(): Promise<ApolloServer> => {
@@ -29,7 +31,7 @@ const createApolloServer = async(): Promise<ApolloServer> => {
     plugins: [ApolloServerPluginLandingPageLocalDefault()],
     context: ({req, res}) => {
       const verifed = verifyAccessTokenFromReqHeaders(req.headers);
-      return { req, res, verifiedUser: verifed, redis };
+      return { req, res, verifiedUser: verifed, redis, cutVoteLoader: createCutVoteLoader() };
     }
   });
 };

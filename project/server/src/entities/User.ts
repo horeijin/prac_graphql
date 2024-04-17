@@ -8,6 +8,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { CutVote } from './CutVote';
 
 @ObjectType()
 @Entity()
@@ -34,4 +35,8 @@ export default class User extends BaseEntity {
   @Field(() => String, { description: '업데이트 일자' })
   @UpdateDateColumn({ comment: '업데이트 일자' })
   updatedAt: Date;
+
+  //하나의 유저는 여러 개의 좋아요를 할 수 있다.
+  @OneToMany(() => CutVote, (cutVote) => cutVote.user)
+  cutVotes: CutVote[];
 }

@@ -1,5 +1,6 @@
 import { DataSource } from 'typeorm';
 import User from '../entities/User';
+import { CutVote } from '../entities/CutVote';
 
 export const AppDataSource = new DataSource({
   type: 'mysql',
@@ -10,7 +11,7 @@ export const AppDataSource = new DataSource({
   password: '1234',
   logging: !(process.env.NODE_ENV === 'production'),
   synchronize: true, // entities에 명시된 내용을 DB에 자동 동기화, 개발 중에 유용하나, 실제 운영 환경에서는 사용을 권장하지 않음
-  entities: [User], // 엔티티 클래스 명시
+  entities: [User, CutVote], // 엔티티 클래스 명시
 });
 
 export const createDB = async (): Promise<DataSource> => {
